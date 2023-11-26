@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from pymongo import MongoClient
 
 
 class Scraper:
@@ -20,8 +21,14 @@ class Scraper:
     }
 
     def __init__(self, *args, **kwargs):
+
+
+
         self.experience_categories = self.get_input_categories('experience')
         self.department_categories = self.get_input_categories('department')
+
+
+
 
     def get_input_categories(self, category_type):
         available_categories = getattr(self, category_type, set())
@@ -52,10 +59,12 @@ class Scraper:
         return url
 
     def scrape_links(self, soup, link_list):
-        links = soup.select('a.posting-list-item')
+        links = soup.select(
+            'body > nfj-root > nfj-layout > nfj-main-content > div > nfj-postings-search > div > div > common-main-loader > nfj-search-results > nfj-postings-list > div.list-container.ng-star-inserted > a.posting-list-item')
         for link in links:
             href = link.get('href')
-            link_list.append(f'{self.base_url}{href}')
+            full_link = f'{self.base_url}{href}'
+            link_list.append(full_link)
 
     def scrape_all_pages(self, link_list):
         url = self.build_url()
@@ -79,6 +88,7 @@ class Scraper:
         req = requests.get(url)
         data = req.text
         return data
+
 
 
 link_list = []
