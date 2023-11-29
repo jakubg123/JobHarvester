@@ -12,10 +12,10 @@ BOT_NAME = "nofluff"
 SPIDER_MODULES = ["nofluff.spiders"]
 NEWSPIDER_MODULE = "nofluff.spiders"
 
-DOWNLOAD_HANDLERS = {
-    "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-    "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-}
+# DOWNLOAD_HANDLERS = {
+#     # "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+#     # "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+# }
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = "nofluff (+http://www.yourdomain.com)"

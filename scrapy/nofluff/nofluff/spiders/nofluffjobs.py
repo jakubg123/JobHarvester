@@ -1,6 +1,8 @@
 import scrapy
 from scrapy.crawler import CrawlerProcess
 from scrapy_playwright.page import PageMethod
+
+
 class NofluffJobsSpider(scrapy.Spider):
     name = "nofluffjobs"
 
@@ -47,24 +49,27 @@ class NofluffJobsSpider(scrapy.Spider):
         print(categories)
         return categories
 
-
-
     def start_requests(self):
         url = self.build_url()
         yield scrapy.Request(url, callback=self.parse)
+
 
     def parse(self, response):
         element = response.css('body > nfj-root > nfj-layout > nfj-main-content > div > nfj-postings-search > div > div > common-main-loader > nfj-search-results > nfj-postings-list > div.list-container.ng-star-inserted > a.posting-list-item')
         for item in element:
             href = item.attrib['href']
             full_link = f'{self.base_url}{href}'
-
             yield {
-                'link' : full_link
+                'link': full_link
             }
+        next_page_url = response.css('a[aria-label="Next"]::attr(href)').get()
 
-    def build_url(self, page=1):
+        if next_page_url:
+            full_url = self.base_url + next_page_url
+            yield response.follow(full_url, self.parse)
+
+    def build_url(self):
         experience_part = ','.join(self.experience_categories)
         department_part = ','.join(self.department_categories)
-        url = f'{self.base_url}/?criteria=category%3D{department_part}%20seniority%3D{experience_part}&page={page}'
+        url = f'{self.base_url}/?criteria=category%3D{department_part}%20seniority%3D{experience_part}'
         return url

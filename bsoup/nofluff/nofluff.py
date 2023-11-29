@@ -1,6 +1,5 @@
 import requests
 from bs4 import BeautifulSoup
-from pymongo import MongoClient
 
 
 class Scraper:
@@ -22,13 +21,8 @@ class Scraper:
 
     def __init__(self, *args, **kwargs):
 
-
-
         self.experience_categories = self.get_input_categories('experience')
         self.department_categories = self.get_input_categories('department')
-
-
-
 
     def get_input_categories(self, category_type):
         available_categories = getattr(self, category_type, set())
@@ -88,7 +82,6 @@ class Scraper:
         req = requests.get(url)
         data = req.text
         return data
-
 
 
 link_list = []
