@@ -23,17 +23,29 @@ class NofluffJobsSpider(scrapy.Spider):
         # https://nofluffjobs.com/?page=1&criteria=category%3Dbackend,frontend%20seniority%3Dtrainee,junior,mid,senior,expert
     }
 
+    language = {
+        'Java', 'React', 'Python', 'React native',
+        '.NET', 'Angular', 'C#', 'Vue.js', 'SQL',
+        'JavaScript', 'Golang', 'TypeScript', 'Scala',
+        'HTML', 'Kotlin', 'PHP', 'C', 'Ruby', 'C++',
+        'Ruby on Rails', 'Azure', 'Android', 'AWS',
+        'iOS', 'Elixir', 'Flutter'
+    }
+
     def __init__(self, *args, **kwargs):
         super(NofluffJobsSpider, self).__init__(*args, **kwargs)
         self.experience_categories = self.get_input_categories('experience')
         self.department_categories = self.get_input_categories('department')
+        self.language_categories = self.get_input_categories('language')
 
     def get_input_categories(self, category_type):
         available_categories = getattr(self, category_type, set())
         categories = set()
         print(f"Available {category_type} categories: {', '.join(sorted(available_categories))}")
         while True:
-            category_input = input(f"Enter a {category_type} category: ").strip().lower()
+            category_input = input(f"Enter a {category_type} category: ")
+            if category_type != 'language':
+                category_input = category_input.strip().lower()
             if category_input == 'done':
                 break
             elif category_input == 'all':
@@ -53,9 +65,9 @@ class NofluffJobsSpider(scrapy.Spider):
         url = self.build_url()
         yield scrapy.Request(url, callback=self.parse)
 
-
     def parse(self, response):
-        element = response.css('body > nfj-root > nfj-layout > nfj-main-content > div > nfj-postings-search > div > div > common-main-loader > nfj-search-results > nfj-postings-list > div.list-container.ng-star-inserted > a.posting-list-item')
+        element = response.css(
+            'body > nfj-root > nfj-layout > nfj-main-content > div > nfj-postings-search > div > div > common-main-loader > nfj-search-results > nfj-postings-list > div.list-container.ng-star-inserted > a.posting-list-item')
         for item in element:
             href = item.attrib['href']
             full_link = f'{self.base_url}{href}'
@@ -71,5 +83,6 @@ class NofluffJobsSpider(scrapy.Spider):
     def build_url(self):
         experience_part = ','.join(self.experience_categories)
         department_part = ','.join(self.department_categories)
-        url = f'{self.base_url}/?criteria=category%3D{department_part}%20seniority%3D{experience_part}'
+        language_part = ','.join(self.language_categories)
+        url = f'{self.base_url}/?criteria=requirement%3D{language_part}%20category%3D{department_part}%20seniority%3D{experience_part}'
         return url
