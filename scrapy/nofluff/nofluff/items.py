@@ -8,11 +8,12 @@ import scrapy
 
 class NofluffItem(scrapy.Item):
     url = scrapy.Field()
-    name = scrapy.Field()
+    title = scrapy.Field()
     category = scrapy.Field()
+    salary_range = scrapy.Field()
 
-    must_have_graphical = scrapy.Field()
-    nice_to_haves_graphical = scrapy.Field()
+    must_have_main = scrapy.Field()
+    nice_tohave_main = scrapy.Field()
 
     requirements_list = scrapy.Field()
     nice_tohaves_list = scrapy.Field()

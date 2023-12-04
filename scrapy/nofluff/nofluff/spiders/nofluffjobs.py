@@ -1,4 +1,5 @@
 import scrapy
+import json
 from scrapy.crawler import CrawlerProcess
 from scrapy_playwright.page import PageMethod
 from ..items import NofluffItem
@@ -70,7 +71,7 @@ class NofluffJobsSpider(scrapy.Spider):
         yield scrapy.Request(url, callback=self.parse)
 
     def parse(self, response):
-        for job_link in response.css('a.posting-list-item::attr(href)').getall():
+        for job_link in response.css('body > nfj-root > nfj-layout > nfj-main-content > div > nfj-postings-search > div > div > common-main-loader > nfj-search-results > nfj-postings-list > div.list-container.ng-star-inserted > a.posting-list-item::attr(href)').getall():
             full_url = self.base_url + job_link
             yield response.follow(job_link, self.parse_job_details, meta={'full_url': full_url})
 
@@ -83,33 +84,42 @@ class NofluffJobsSpider(scrapy.Spider):
     def parse_job_details(self, response):
         full_url = response.meta.get('full_url')
 
-        name = response.css('#posting-header > div > div > h1::text').get().strip()
+        title = response.css('#posting-header > div > div > h1::text').get().strip()
+
+        salary_range = response.css('h4.tw-mb-0::text').get().strip().replace('\xa0', ' ')
 
         categories = response.css('div > aside > div > a')
         category_list = [element.css('::text').get().strip() for element in categories]
 
-        must_haves_elements = response.css('#posting-requirements > section > ul > li > span')
-        must_haves_short = [element.css('::text').get().strip() for element in must_haves_elements]
+        must_have_elements = response.css('#posting-requirements > section > ul > li > span')
+        must_have_main = [element.css('::text').get().strip() for element in must_have_elements]
 
-        nice_tohaves_elements = response.css('#posting-nice-to-have > ul > li > span')
-        nice_tohaves_short = [element.css('::text').get().strip() for element in nice_tohaves_elements]
+        nice_tohave_elements = response.css('#posting-nice-to-have > ul > li > span')
+        nice_tohave_main = [element.css('::text').get().strip() for element in nice_tohave_elements]
 
         requirements = response.css('div > nfj-read-more > div > ul:nth-child(2) > li')
         requirements_list = [element.css('::text').get().strip() for element in requirements]
 
         nice_tohaves = response.css("div > nfj-read-more > div > ul:nth-child(4) > li")
+
         nice_tohaves_list = [element.css('::text').get().strip() for element in nice_tohaves]
 
         item = NofluffItem(
             url=full_url,
-            name=name,
+            title=title,
             category=category_list,
-            must_have_graphical=must_haves_short,
-            nice_to_haves_graphical=nice_tohaves_short,
+            salary_range=salary_range,
+
+            must_have_main=must_have_main,
+            nice_tohave_main=nice_tohave_main,
+
             requirements_list=requirements_list,
             nice_tohaves_list=nice_tohaves_list,
         )
 
+        item_dict = dict(item)
+        formatted_json = json.dumps(item_dict, indent=4, ensure_ascii=False)
+        self.logger.debug(formatted_json)
         yield item
 
     def build_url(self):
