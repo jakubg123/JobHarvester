@@ -85,36 +85,28 @@ class NofluffJobsSpider(scrapy.Spider):
         full_url = response.meta.get('full_url')
 
         title = response.css('#posting-header > div > div > h1::text').get().strip()
+        company = response.css('#postingCompanyUrl::text').get().strip()
 
         salary_range = response.css('h4.tw-mb-0::text').get().strip().replace('\xa0', ' ')
 
         categories = response.css('div > aside > div > a')
         category_list = [element.css('::text').get().strip() for element in categories]
 
-        must_have_elements = response.css('#posting-requirements > section > ul > li > span')
+        must_have_elements = response.css('#posting-requirements > section:nth-child(1) > ul > li > span')
         must_have_main = [element.css('::text').get().strip() for element in must_have_elements]
-
+        
         nice_tohave_elements = response.css('#posting-nice-to-have > ul > li > span')
         nice_tohave_main = [element.css('::text').get().strip() for element in nice_tohave_elements]
 
-        requirements = response.css('div > nfj-read-more > div > ul:nth-child(2) > li')
-        requirements_list = [element.css('::text').get().strip() for element in requirements]
-
-        nice_tohaves = response.css("div > nfj-read-more > div > ul:nth-child(4) > li")
-
-        nice_tohaves_list = [element.css('::text').get().strip() for element in nice_tohaves]
 
         item = NofluffItem(
             url=full_url,
             title=title,
+            company=company,
             category=category_list,
             salary_range=salary_range,
-
             must_have_main=must_have_main,
             nice_tohave_main=nice_tohave_main,
-
-            requirements_list=requirements_list,
-            nice_tohaves_list=nice_tohaves_list,
         )
 
         item_dict = dict(item)
