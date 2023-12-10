@@ -7,6 +7,12 @@ import scrapy
 
 
 class TheprotocolItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+    url = scrapy.Field()
+    title = scrapy.Field()
+    company = scrapy.Field()
+
+    # category = scrapy.Field()
+    salary_range = scrapy.Field()
+
+    must_have_main = scrapy.Field()
+    # nice_tohave_main = scrapy.Field()

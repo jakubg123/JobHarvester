@@ -7,6 +7,20 @@ from scrapy import signals
 
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
+import random
+
+
+class RandomUserAgentMiddleware(object):
+    def __init__(self, user_agents):
+        self.user_agents = user_agents
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(crawler.settings.get('USER_AGENT_LIST'))
+
+    def process_request(self, request, spider):
+        user_agent = random.choice(self.user_agents)
+        request.headers.setdefault('User-Agent', user_agent)
 
 
 class TheprotocolSpiderMiddleware:
