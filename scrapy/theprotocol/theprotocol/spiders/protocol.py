@@ -119,7 +119,6 @@ class ProtocolSpider(scrapy.Spider):
     async def parse_details(self, response):
         full_url = response.meta.get('full_url')
         page = response.meta['playwright_page']
-
         await page.close()
 
         job_title = response.css(
