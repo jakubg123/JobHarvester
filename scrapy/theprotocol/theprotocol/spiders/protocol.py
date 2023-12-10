@@ -76,13 +76,13 @@ class ProtocolSpider(scrapy.Spider):
         if 'playwright_page' in response.meta:
             page = response.meta['playwright_page']
             await page.close()
-            processed_urls = set()  # Set to track processed URLs
+            processed_urls = set()
             for link in response.css('section.lniiuf0 > div > div > div.l1785eyd > div > a'):
                 url = link.css('::attr(href)').get()
                 full_url = self.base_url + url
 
                 if full_url not in processed_urls:
-                    processed_urls.add(full_url)  # Add URL to the set
+                    processed_urls.add(full_url)
 
                     yield response.follow(link, self.parse_details, meta={
                         'full_url': full_url,
@@ -106,8 +106,10 @@ class ProtocolSpider(scrapy.Spider):
 
                             PageMethod("wait_for_selector",
                                        "#offerHeader"),
+
                             # PageMethod('wait_for_selector',
                             #            '__next > div > div.c1kpnzt5.GridElement_g16c3y1q > div > div > div > div > div > div > div > div > div.mainWrapperClass_m104iqca'),
+
                             PageMethod('wait_for_selector',
                                        '#TECHNOLOGY_AND_POSITION'),
                         ],
@@ -150,21 +152,32 @@ class ProtocolSpider(scrapy.Spider):
             '#offerHeader > div.headline_hrxluye.GridElement_g16c3y1q > div.titleBox_tk35js1.GridElement_g16c3y1q > h2 > a::text').get()
 
         # Extract unique must-have elements
-        must_have_elements = response.css('#TECHNOLOGY_AND_POSITION > div > div > div > div > span')
+        must_have_elements = response.css(
+            '#TECHNOLOGY_AND_POSITION > div:nth-child(1) > div:nth-child(2) > div > div > span')
         must_have_main = list(set([element.css('::text').get().strip() for element in must_have_elements]))
 
-            # item = ProtocolSpider(
-            # url=url,
-            # title=job_title,
-            # company=company,
-            # # category=category_list,
-            # salary_range=salary_range,
-            # must_have_main=must_have_main,
-            # # nice_tohave_main=nice_tohave_main,
+        nice_tohave_elements = response.css(
+            '#TECHNOLOGY_AND_POSITION > div:nth-child(1) > div:nth-child(3) > div > div > span')
+        nice_tohave_main = list(set([element.css('::text').get().strip() for element in nice_tohave_elements]))
+        
+        detailed_requirements = response.css('#TECHNOLOGY_AND_POSITION > div:nth-child(3) > ul > li > span > div')
+        detailed_list = list(set([element.css('::text').get().strip() for element in detailed_requirements]))
+        #
+        # item = ProtocolSpider(
+        #     url=full_url,
+        #     title=job_title,
+        #     company=company,
+        #     # category=category_list,
+        #     # salary_range=salary_range,
+        #     must_have_main=must_have_main,
+        #     nice_tohave_main=nice_tohave_main
+        # )
 
         yield {
             'url': full_url,
             'job_title': job_title,
             'company': company,
-            'must_have_main': must_have_main
+            'must-have main': must_have_main,
+            'nice to have': nice_tohave_main,
+            'detailed_requirements': detailed_list
         }
