@@ -115,30 +115,6 @@ class ProtocolSpider(scrapy.Spider):
                         ],
                     })
 
-                # job_title = item.css('#offer-title::text').get()
-                # company = item.css('div.mainWrapper_mlnqt8l.GridElement_g16c3y1q > div > div > div::text').get()
-                # salary_range_element = item.css('div > div > div > div > div > span.boldText_b1wsb650::text').get()
-                # salary_range = salary_range_element if salary_range_element is not None else None
-                # must_have_main = item.css(
-                #     'div.section_s1lmyctb.GridElement_g16c3y1q > div > div > div > div > span::text').get()
-
-                # item = ProtocolSpider(
-                #     url=url,
-                #     title=job_title,
-                #     company=company,
-                #     # category=category_list,
-                #     salary_range=salary_range,
-                #     must_have_main=must_have_main,
-                #     # nice_tohave_main=nice_tohave_main,
-                # )
-
-                # yield {
-                #     'url' : url,
-                #     'job_title': job_title,
-                #     'company': company,
-                # 'salary_range': salary_range,
-                # must_have_main: must_have_main
-                # }
 
     async def parse_details(self, response):
         full_url = response.meta.get('full_url')
@@ -151,33 +127,32 @@ class ProtocolSpider(scrapy.Spider):
         company = response.css(
             '#offerHeader > div.headline_hrxluye.GridElement_g16c3y1q > div.titleBox_tk35js1.GridElement_g16c3y1q > h2 > a::text').get()
 
-        # Extract unique must-have elements
         must_have_elements = response.css(
             '#TECHNOLOGY_AND_POSITION > div:nth-child(1) > div:nth-child(2) > div > div > span')
         must_have_main = list(set([element.css('::text').get().strip() for element in must_have_elements]))
 
+        salary_parts = response.css('p.SalaryInfo_s6hpd6f::text').getall()
+        if salary_parts:
+            full_salary_text = ''.join(salary_parts).strip()
+            full_salary_text = full_salary_text.replace(u'\xa0', u' ')
+            salary_range = full_salary_text
+        else:
+            salary_range = "Not found"
+
         nice_tohave_elements = response.css(
             '#TECHNOLOGY_AND_POSITION > div:nth-child(1) > div:nth-child(3) > div > div > span')
         nice_tohave_main = list(set([element.css('::text').get().strip() for element in nice_tohave_elements]))
-        
+
         detailed_requirements = response.css('#TECHNOLOGY_AND_POSITION > div:nth-child(3) > ul > li > span > div')
         detailed_list = list(set([element.css('::text').get().strip() for element in detailed_requirements]))
-        #
-        # item = ProtocolSpider(
-        #     url=full_url,
-        #     title=job_title,
-        #     company=company,
-        #     # category=category_list,
-        #     # salary_range=salary_range,
-        #     must_have_main=must_have_main,
-        #     nice_tohave_main=nice_tohave_main
-        # )
 
-        yield {
-            'url': full_url,
-            'job_title': job_title,
-            'company': company,
-            'must-have main': must_have_main,
-            'nice to have': nice_tohave_main,
-            'detailed_requirements': detailed_list
-        }
+        item = TheprotocolItem(
+            url=full_url,
+            title=job_title,
+            company=company,
+            salary_range = salary_range,
+            must_have_main=must_have_main,
+            nice_tohave_main=nice_tohave_main,
+        )
+
+        yield item
