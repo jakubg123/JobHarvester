@@ -3,7 +3,10 @@ import json
 from scrapy.crawler import CrawlerProcess
 from scrapy_playwright.page import PageMethod
 from ..items import NofluffItem
-
+import asyncio
+from selenium import webdriver
+from scrapy.http import HtmlResponse
+from selenium.webdriver.chrome.options import Options
 
 class NofluffJobsSpider(scrapy.Spider):
     name = "nofluffjobs"
@@ -22,7 +25,6 @@ class NofluffJobsSpider(scrapy.Spider):
         'sys-administrator', 'agile', 'product-management',
         'project-manager', 'business-intelligence', 'ux',
         'support', 'erp', 'other'
-        # https://nofluffjobs.com/?page=1&criteria=category%3Dbackend,frontend%20seniority%3Dtrainee,junior,mid,senior,expert
     }
 
     language = {
@@ -37,11 +39,29 @@ class NofluffJobsSpider(scrapy.Spider):
     # language dict specifies tech you want to work with, so the more you specify the less lobs will be returned
     # as your query gets more specified.
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, preset=None, **kwargs):
         super(NofluffJobsSpider, self).__init__(*args, **kwargs)
-        self.experience_categories = self.get_input_categories('experience')
-        self.department_categories = self.get_input_categories('department')
-        self.language_categories = self.get_input_categories('language')
+        self.preset = int(preset) if preset and preset.isdigit() else None
+        self.handle_preset()
+
+    def handle_preset(self):
+        if self.preset == 1:
+            self.experience_categories = self.get_input_categories('experience')
+            self.department_categories = self.get_input_categories('department')
+            self.language_categories = set()
+        elif self.preset == 2:
+            self.experience_categories = self.get_input_categories('experience')
+            self.language_category = self.get_language()
+            self.department_categories = set()
+
+    def get_language(self):
+        print(f"Available languages: {', '.join(sorted(self.language))}")
+        while True:
+            language_input = input("Enter a department: ").strip().capitalize()
+            if language_input in self.language:
+                return language_input
+            else:
+                print("Invalid department. Please try again.")
 
     def get_input_categories(self, category_type):
         available_categories = getattr(self, category_type, set())
@@ -70,8 +90,10 @@ class NofluffJobsSpider(scrapy.Spider):
         url = self.build_url()
         yield scrapy.Request(url, callback=self.parse)
 
-    def parse(self, response):
+    async def parse(self, response):
+
         for job_link in response.css('body > nfj-root > nfj-layout > nfj-main-content > div > nfj-postings-search > div > div > common-main-loader > nfj-search-results > nfj-postings-list > div.list-container.ng-star-inserted > a.posting-list-item::attr(href)').getall():
+            # nfjPostingListItem-junior-ruby-developer-devopsbay-Sop
             full_url = self.base_url + job_link
             yield response.follow(job_link, self.parse_job_details, meta={'full_url': full_url})
 
@@ -84,7 +106,8 @@ class NofluffJobsSpider(scrapy.Spider):
     def parse_job_details(self, response):
         full_url = response.meta.get('full_url')
 
-        title = response.css('#posting-header > div > div > h1::text').get().strip()
+        title = response.css('#posting-header > div > div > h1::text').get()
+
         company = response.css('#postingCompanyUrl::text').get().strip()
 
         salary_range = response.css('h4.tw-mb-0::text').get().strip().replace('\xa0', ' ')
@@ -117,7 +140,7 @@ class NofluffJobsSpider(scrapy.Spider):
     def build_url(self):
         experience_part = ','.join(self.experience_categories)
         department_part = ','.join(self.department_categories)
-        language_part = ','.join(self.language_categories)
+        language_part = ','.join(self.language_category)
         if language_part != '':
             url = f'{self.base_url}/?criteria=requirement%3D{language_part}%20category%3D{department_part}%20seniority%3D{experience_part}'
         else:
