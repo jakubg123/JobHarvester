@@ -23,10 +23,37 @@ class ProtocolSpider(scrapy.Spider):
         'sap-erp', 'system-analytics',
     }
 
-    def __init__(self, *args, **kwargs):
+    language = {
+        'java', 'sql', 'rust', 'typescript',
+        'ruby', 'react.js', 'r', 'python', 'php',
+        'node.js', 'javascript', 'ios', 'html',
+        'hibernate', 'go', 'c++', 'c%23', 'c', 'aws',
+        'angular', 'android', '.net'
+    }
+
+    def __init__(self, *args, preset=None, **kwargs):
         super(ProtocolSpider, self).__init__(*args, **kwargs)
-        self.experience_categories = self.get_input_categories('experience')
-        self.department_categories = self.get_input_categories('department')
+        self.preset = int(preset) if preset and preset.isdigit() else None
+        self.handle_preset()
+
+    def handle_preset(self):
+        if self.preset == 1:
+            self.experience_categories = self.get_input_categories('experience')
+            self.department_categories = self.get_input_categories('department')
+            self.language_category = set()
+        elif self.preset == 2:
+            self.experience_categories = self.get_input_categories('experience')
+            self.language_category = self.get_language()
+            self.department_categories = set()
+
+    def get_language(self):
+        print(f"Available languages: {', '.join(sorted(self.language))}")
+        while True:
+            language_input = input("Enter language: ").strip().lower()
+            if language_input in self.language:
+                return language_input
+            else:
+                print("Invalid language. Please try again.")
 
     def get_input_categories(self, category_type):
         available_categories = getattr(self, category_type, set())
@@ -52,9 +79,11 @@ class ProtocolSpider(scrapy.Spider):
     def build_url(self):
         experience_part = ','.join(self.experience_categories)
         department_part = ','.join(self.department_categories)
-        # language_part = ','.join(self.language_categories)
-        # if language_part != '':
-        url = f'{self.base_url}/filtry/{department_part};sp/{experience_part};p'
+        if self.preset == 1:
+            url = f'{self.base_url}/filtry/{department_part};sp/{experience_part};p'
+        else:
+            url = f'{self.base_url}/filtry/{self.language_category};t/{experience_part};p'
+
         return url
 
     def start_requests(self):
@@ -66,7 +95,10 @@ class ProtocolSpider(scrapy.Spider):
                 playwright_include_page=True,
                 playwright_page_methods=[
                     PageMethod("wait_for_selector",
-                               "section.lniiuf0 > div > div > div.l1785eyd > div")
+                               "section.lniiuf0 > div > div > div.l1785eyd > div"),
+
+                    PageMethod('wait_for_selector',
+                               'div.DescriptionAndActions_d1jrj6mc > div.Actions_aa55f06 > button.button_b1cb9caz.button_b1qpzqhe.wrapper_w11iwtu0.primary_po2dfa.contained_c104vegi > div')
                 ],
             ),
             callback=self.parse
@@ -115,7 +147,6 @@ class ProtocolSpider(scrapy.Spider):
                         ],
                     })
 
-
     async def parse_details(self, response):
         full_url = response.meta.get('full_url')
         page = response.meta['playwright_page']
@@ -149,7 +180,7 @@ class ProtocolSpider(scrapy.Spider):
             url=full_url,
             title=job_title,
             company=company,
-            salary_range = salary_range,
+            salary_range=salary_range,
             must_have_main=must_have_main,
             nice_tohave_main=nice_tohave_main,
         )
