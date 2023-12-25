@@ -33,7 +33,13 @@ class ProtocolSpider(scrapy.Spider):
 
     def __init__(self, *args, preset=None, **kwargs):
         super(ProtocolSpider, self).__init__(*args, **kwargs)
-        self.preset = int(preset) if preset and preset.isdigit() else None
+        if preset is not None:
+            try:
+                self.preset = int(preset)
+            except ValueError:
+                self.preset = None  # or handle the error as you see fit
+        else:
+            self.preset = None
         self.handle_preset()
 
     def handle_preset(self):
