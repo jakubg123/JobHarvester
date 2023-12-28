@@ -9,7 +9,10 @@ class JoinitSpider(scrapy.Spider):
     base_url = 'https://justjoin.it'
 
     experience = {
-        'junior', 'mid', 'senior', 'c-level'
+        'student': ['junior'],
+        'junior': ['junior', 'mid'],
+        'mid': ['mid', 'senidor'],
+        'senior': ['senior', 'c-level'],
     }
 
     department = {

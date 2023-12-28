@@ -1,12 +1,7 @@
 import scrapy
 import json
-from scrapy.crawler import CrawlerProcess
-from scrapy_playwright.page import PageMethod
+
 from ..items import NofluffItem
-import asyncio
-from selenium import webdriver
-from scrapy.http import HtmlResponse
-from selenium.webdriver.chrome.options import Options
 
 
 class NofluffJobsSpider(scrapy.Spider):
@@ -14,11 +9,11 @@ class NofluffJobsSpider(scrapy.Spider):
 
     base_url = 'https://nofluffjobs.com'
 
-    experience = {
-        'student' : ['trainee', 'junior'],
-        'junior' : ['junior', 'mid'],
-        'mid' : ['mid', 'senior'],
-        'senior' : ['expert', 'senior'],
+    experience_mapping = {
+        'student': ['trainee', 'junior'],
+        'junior': ['junior', 'mid'],
+        'mid': ['mid', 'senior'],
+        'senior': ['expert', 'senior'],
     }
 
     department = {
@@ -41,30 +36,32 @@ class NofluffJobsSpider(scrapy.Spider):
     }
 
     # language dict specifies tech you want to work with, so the more you specify the less lobs will be returned
-    # as your query gets more specified.
+    # that's why I've decided to enable selecting only one language
 
-    def __init__(self, *args, preset=None, **kwargs):
+    def __init__(self, *args, preset=None, experience_level=None, secondary_category=None, **kwargs):
         super(NofluffJobsSpider, self).__init__(*args, **kwargs)
-        self.language_category = set()
         self.preset = int(preset)
-        self.experience_indicator = None
-        self.handle_preset()
+        self.experience_categories = self.experience_mapping.get(experience_level)
+        self.secondary_categories = secondary_category
+        # self.handle_preset()
 
     def handle_preset(self):
         if self.preset == 1:
-            self.experience_categories = self.get_input_categories('experience')
-            self.language_category = self.get_language()
+            self.language_category =
         elif self.preset == 2:
             self.experience_categories = self.get_input_categories('experience')
             self.department_categories = self.get_input_categories('department')
+            invalid_departments = [d for d in self.department_categories if d not in self.department]
+            if invalid_departments:
+                raise ValueError(f"Invalid department categories: {', '.join(invalid_departments)}")
 
     def build_url(self):
         experience_part = ','.join(self.experience_categories)
         if self.preset == 1:
-            url = f'{self.base_url}/?criteria=requirement%3D{self.language_category}%20seniority%3D{experience_part}'
-        else:
-            department_part = ','.join(self.department_categories)
-            url = f'{self.base_url}/?criteria=category%3D{department_part}%20seniority%3D{experience_part}'
+            url = f'{self.base_url}/?criteria=requirement%3D{self.secondary_categories}%20seniority%3D{experience_part}'
+        # else:
+        #     department_part = ','.join(self.department_categories)
+        #     url = f'{self.base_url}/?criteria=category%3D{department_part}%20seniority%3D{experience_part}'
         return url
 
     def get_language(self):
@@ -111,7 +108,7 @@ class NofluffJobsSpider(scrapy.Spider):
                 elif category_input in available_categories:
                     categories.add(category_input)
                 else:
-                    print(f"Invalid {category_type} category input. Please try again.")
+                    print(f"Invalid {category_type} category input")
             print("Selected categories:", categories)
             return categories
 
@@ -122,7 +119,7 @@ class NofluffJobsSpider(scrapy.Spider):
     async def parse(self, response):
 
         for job_link in response.css(
-                'body > nfj-root > nfj-layout > nfj-main-content > div > nfj-postings-search > div > div > common-main-loader > nfj-search-results > nfj-postings-list > div.list-container.ng-star-inserted > a.posting-list-item::attr(href)').getall():
+                'body > nfj-root > nfj-layout > nfj-main-content > div > nfj-postings-search > div > div > common-main-loader > nfj-search-results > nfj-postings-list > div.list-container > a.posting-list-item::attr(href)').getall():
             full_url = self.base_url + job_link
             yield response.follow(job_link, self.parse_job_details, meta={'full_url': full_url})
 
@@ -135,12 +132,15 @@ class NofluffJobsSpider(scrapy.Spider):
     def parse_job_details(self, response):
         full_url = response.meta.get('full_url')
 
-        title = response.css('#posting-header > div > div > h1::text').get()
+        title = response.css('#posting-header > div > div > h1::text').get().strip()
 
         company = response.css('#postingCompanyUrl::text').get().strip()
 
-        salary_range = response.css('h4.tw-mb-0::text').get().strip().replace('\xa0', ' ')
+        salary_elements = response.css('common-posting-salaries-list > div > h4.tw-mb-0::text').getall()
+        salary_range = ' '.join(salary_elements).strip()
+        salary_range = salary_range.replace(',', '').replace('\xa0', ' ')
 
+        # salary_range = response.css('h4.tw-mb-0::text').get().strip().replace('\xa0', ' ')
 
         must_have_elements = response.css('#posting-requirements > section:nth-child(1) > ul > li > span')
         must_have_main = [element.css('::text').get().strip() for element in must_have_elements]

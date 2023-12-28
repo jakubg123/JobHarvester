@@ -9,8 +9,12 @@ class ProtocolSpider(scrapy.Spider):
 
     base_url = 'https://theprotocol.it'
 
+
     experience = {
-        'trainee', 'assistant', 'junior', 'mid', 'senior', 'expert', 'lead', 'manager', 'head'
+        'student': ['trainee', 'assistant', 'junior'],
+        'junior': ['junior', 'mid'],
+        'mid': ['mid', 'senior'],
+        'senior': ['expert', 'senior', 'lead', 'head'],
     }
 
     department = {

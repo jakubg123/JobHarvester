@@ -35,14 +35,21 @@ class MongoPipeline:
         self.client.close()
 
     def process_item(self, item, spider):
+        try:
+            collection_name = self.get_collection_name(spider)
+            self.db[collection_name].insert_one(dict(item))
+            spider.logger.info(f"Item inserted into {collection_name}")
+            return item
+        except Exception as e:
+            spider.logger.error(f"Error inserting item into {collection_name}: {e}")
+
+    def get_collection_name(self, spider):
         if spider.preset == 1:
-            collection_name = f"{spider.category_indicator}_{spider.language_category}_collection"
+            collection_name = f"{spider.experience_categories}_{spider.department_categories}_collection"
         elif spider.preset == 2:
             collection_name = f"{spider.category_indicator}_{spider.department_categories}_collection"
         else:
             collection_name = 'unknown'
 
         collection_name = collection_name.lower().replace(" ", "_").replace(",", "_")
-
-        self.db[collection_name].insert_one(dict(item))
-        return item
+        return collection_name
