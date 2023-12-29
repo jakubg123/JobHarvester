@@ -1,7 +1,20 @@
+import sys
+
+sys.path.append('/JobHarvester/justjoinit')
+sys.path.append('/JobHarvester/nofluff')
+sys.path.append('/JobHarvester/theprotocol')
+
 from scrapy.crawler import CrawlerProcess
+from scrapy.settings import Settings
+from scrapy.utils.project import get_project_settings
+
+from justjoinit.justjoinit.spiders.joinit import JoinitSpider
 from nofluff.nofluff.spiders.nofluffjobs import NofluffJobsSpider
+from theprotocol.theprotocol.spiders.protocol import ProtocolSpider
+
 
 if __name__ == "__main__":
+
     departament = {
         'backend': ['backend'],
         'frontend': ['frontend'],
@@ -54,12 +67,6 @@ if __name__ == "__main__":
 
     preset = input("Enter preset for spiders:")
     if int(preset) == 1:
-        print(exp)
-        while True:
-            experience_level = input("Enter experience level:")
-            if experience_level in exp:
-                break
-
         keys = ' '.join(language.keys())
         print(keys)
         while True:
@@ -76,18 +83,30 @@ if __name__ == "__main__":
                 user_language = value
                 break
 
-        process = CrawlerProcess()
-        process.crawl(NofluffJobsSpider, preset=preset, experience_level=experience_level, secondary_category=user_language)
-        process.start()
-
-
-
-
-
-
-
-
     elif int(preset) == 2:
-        pass
-    else:
-        pass
+        keys = ' '.join(departament.keys())
+        print(keys)
+        while True:
+            user_input = input("Enter a department: ").strip()
+            if user_input in departament:
+                print(f"{user_input} inserted.")
+                break
+            else:
+                print(f"Department not in dict.")
+
+        values = departament[user_input]
+        for value in values:
+            if value in NofluffJobsSpider.department:
+                user_language = value
+                break
+
+    print(exp)
+    while True:
+        experience_level = input("Enter experience level:")
+        if experience_level in exp:
+            break
+
+    process = CrawlerProcess(get_project_settings())
+
+    process.crawl(NofluffJobsSpider, preset=preset, experience_level=experience_level, secondary_category=user_language)
+    process.start()

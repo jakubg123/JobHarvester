@@ -41,13 +41,13 @@ class MongoPipeline:
             spider.logger.info(f"Item inserted into {collection_name}")
             return item
         except Exception as e:
-            spider.logger.error(f"Error inserting item into {collection_name}: {e}")
+            spider.logger.error(f"{collection_name} error: {e}")
 
     def get_collection_name(self, spider):
         if spider.preset == 1:
-            collection_name = f"{spider.experience_categories}_{spider.department_categories}_collection"
+            collection_name = f"{spider.experience_categories}_{spider.secondary_categories}_collection"
         elif spider.preset == 2:
-            collection_name = f"{spider.category_indicator}_{spider.department_categories}_collection"
+            collection_name = f"{spider.category_indicator}_{spider.secondary_categories}_collection"
         else:
             collection_name = 'unknown'
 

@@ -4,9 +4,10 @@
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
 from scrapy import signals
-import random
+
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
+import random
 
 
 class RandomUserAgentMiddleware(object):
@@ -21,9 +22,10 @@ class RandomUserAgentMiddleware(object):
         user_agent = random.choice(self.user_agents)
         request.headers.setdefault('User-Agent', user_agent)
 
-class JustjoinitSpiderMiddleware:
+
+class TheprotocolSpiderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
-    # scrapy acts as if the spider middleware does not modify the
+    # JobHarvester acts as if the spider middleware does not modify the
     # passed objects.
 
     @classmethod
@@ -68,9 +70,9 @@ class JustjoinitSpiderMiddleware:
         spider.logger.info("Spider opened: %s" % spider.name)
 
 
-class JustjoinitDownloaderMiddleware:
+class TheprotocolDownloaderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
-    # scrapy acts as if the downloader middleware does not modify the
+    # JobHarvester acts as if the downloader middleware does not modify the
     # passed objects.
 
     @classmethod

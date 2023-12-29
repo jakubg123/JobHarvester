@@ -13,7 +13,7 @@ SPIDER_MODULES = ["nofluff.spiders"]
 NEWSPIDER_MODULE = "nofluff.spiders"
 
 # DOWNLOADER_MIDDLEWARES = {
-#     'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
+#     'JobHarvester.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
 #     # 'scrapy_user_agents.middlewares.RandomUserAgentMiddleware': 400,
 # }
 
@@ -26,6 +26,7 @@ ROBOTSTXT_OBEY = True
 
 MONGO_URI = 'mongodb://localhost:27017'
 MONGO_DATABASE = 'scrapy_data'
+
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 # CONCURRENT_REQUESTS = 32
 
@@ -64,13 +65,12 @@ MONGO_DATABASE = 'scrapy_data'
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
 # EXTENSIONS = {
-#    "scrapy.extensions.telnet.TelnetConsole": None,
+#    "JobHarvester.extensions.telnet.TelnetConsole": None,
 # }
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    # "nofluff.pipelines.NofluffPipeline": 300,
     'nofluff.pipelines.MongoPipeline': 301,
 }
 
@@ -93,7 +93,7 @@ ITEM_PIPELINES = {
 # HTTPCACHE_EXPIRATION_SECS = 0
 # HTTPCACHE_DIR = "httpcache"
 # HTTPCACHE_IGNORE_HTTP_CODES = []
-# HTTPCACHE_STORAGE = "scrapy.extensions.httpcache.FilesystemCacheStorage"
+# HTTPCACHE_STORAGE = "JobHarvester.extensions.httpcache.FilesystemCacheStorage"
 
 # Set settings whose default value is deprecated to a future-proof value
 REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"

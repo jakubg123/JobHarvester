@@ -14,4 +14,4 @@ class TheprotocolItem(scrapy.Item):
     must_have_main = scrapy.Field()
     nice_tohave_main = scrapy.Field()
 
-    # detailed_list = scrapy.Field()
+    # detailed_list = JobHarvester.Field()

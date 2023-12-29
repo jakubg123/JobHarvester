@@ -43,80 +43,20 @@ class NofluffJobsSpider(scrapy.Spider):
         self.preset = int(preset)
         self.experience_categories = self.experience_mapping.get(experience_level)
         self.secondary_categories = secondary_category
-        # self.handle_preset()
-
-    def handle_preset(self):
-        if self.preset == 1:
-            self.language_category =
-        elif self.preset == 2:
-            self.experience_categories = self.get_input_categories('experience')
-            self.department_categories = self.get_input_categories('department')
-            invalid_departments = [d for d in self.department_categories if d not in self.department]
-            if invalid_departments:
-                raise ValueError(f"Invalid department categories: {', '.join(invalid_departments)}")
 
     def build_url(self):
         experience_part = ','.join(self.experience_categories)
         if self.preset == 1:
             url = f'{self.base_url}/?criteria=requirement%3D{self.secondary_categories}%20seniority%3D{experience_part}'
-        # else:
-        #     department_part = ','.join(self.department_categories)
-        #     url = f'{self.base_url}/?criteria=category%3D{department_part}%20seniority%3D{experience_part}'
-        return url
-
-    def get_language(self):
-        print(f"Available languages: {', '.join(sorted(self.language))}")
-        while True:
-            language_input = input("Enter language: ").strip()
-            if language_input in self.language:
-                return language_input
-            else:
-                print("Invalid language. Please try again.")
-
-    def get_input_categories(self, category_type):
-        available_categories = getattr(self, category_type, {})
-
-        if category_type == 'experience':
-            print("Available experience categories:")
-            for key, values in available_categories.items():
-                print(f"{key}: {', '.join(values)}")
-
-            while True:
-                category_input = input(f"Enter an {category_type} category: ").strip().lower()
-                if category_input in available_categories:
-                    self.category_indicator = category_input
-                    return set(available_categories[category_input])
-                else:
-                    print(f"Invalid {category_type} category input. Please try again.")
-
         else:
-            print(f"Available {category_type} categories: {', '.join(sorted(available_categories))}")
-            categories = set()
-            while True:
-                category_input = input(f"Enter a {category_type} category: ")
-                if category_type != 'language':
-                    category_input = category_input.strip().lower()
-
-                if category_input == 'done':
-                    break
-                elif category_input == 'all':
-                    categories = available_categories.copy()
-                    break
-                elif category_input == 'exclude':
-                    exclude_input = input(f"Enter categories to exclude (comma-separated): ").strip().lower().split(',')
-                    categories.update(available_categories - set(exclude_input))
-                elif category_input in available_categories:
-                    categories.add(category_input)
-                else:
-                    print(f"Invalid {category_type} category input")
-            print("Selected categories:", categories)
-            return categories
+            url = f'{self.base_url}/?criteria=category%3D{self.secondary_categories}%20seniority%3D{experience_part}'
+        return url
 
     def start_requests(self):
         url = self.build_url()
         yield scrapy.Request(url, callback=self.parse)
 
-    async def parse(self, response):
+    def parse(self, response):
 
         for job_link in response.css(
                 'body > nfj-root > nfj-layout > nfj-main-content > div > nfj-postings-search > div > div > common-main-loader > nfj-search-results > nfj-postings-list > div.list-container > a.posting-list-item::attr(href)').getall():
