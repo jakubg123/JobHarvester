@@ -7,7 +7,8 @@
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
 import pymongo
-
+from datetime import datetime
+from datetime import timedelta
 
 class JobharvesterPipeline:
     def process_item(self, item, spider):
@@ -31,16 +32,23 @@ class MongoPipeline:
         self.client = pymongo.MongoClient(self.mongo_uri)
         self.db = self.client[self.mongo_db]
 
+        # clearing old positions that are probably already expiered
+        delete_date = datetime.now() - timedelta(days=14)
+        formatted_date = delete_date.strftime('%Y-%m-%d')
+
+        collection_name = self.get_collection_name(spider)
+        self.db[collection_name].delete_many({'date': {'$lt': formatted_date}}) # gt removes the elements with date < x days
+
     def close_spider(self, spider):
         self.client.close()
 
     def process_item(self, item, spider):
         collection_name = self.get_collection_name(spider)
         if self.db[collection_name].find_one({'item_id': item['item_id']}):
-            spider.logger.info(f"Item with id {item['item_id']} already exists.")
+            spider.logger.info(f"{item['item_id']} already in mongo.")
         else:
             self.db[collection_name].insert_one(dict(item))
-            spider.logger.info(f"Item with id {item['item_id']} added to MongoDB.")
+            spider.logger.info(f"{item['item_id']} added to MongoDB.")
         return item
 
     def get_collection_name(self, spider):
