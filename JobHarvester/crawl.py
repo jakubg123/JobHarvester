@@ -1,21 +1,24 @@
-import sys
-
-sys.path.append('/JobHarvester/justjoinit')
-sys.path.append('/JobHarvester/nofluff')
-sys.path.append('/JobHarvester/theprotocol')
-
+from typing import Optional, List
 from scrapy.crawler import CrawlerProcess
-from scrapy.settings import Settings
 from scrapy.utils.project import get_project_settings
+from JobHarvester.spiders.nofluffjobs import NofluffJobsSpider
+from JobHarvester.spiders.protocol import ProtocolSpider
+from JobHarvester.spiders.joinit import JoinitSpider
+from datetime import datetime
 
-from justjoinit.justjoinit.spiders.joinit import JoinitSpider
-from nofluff.nofluff.spiders.nofluffjobs import NofluffJobsSpider
-from theprotocol.theprotocol.spiders.protocol import ProtocolSpider
+
+def get_user_input(prompt: str, valid_options: List[str]) -> str:
+    while True:
+        user_input = input(prompt).strip()
+        if user_input in valid_options:
+            print(f"{user_input} inserted.")
+            return user_input
+        else:
+            print(f"Invalid choice.")
 
 
-if __name__ == "__main__":
-
-    departament = {
+def main():
+    department = {
         'backend': ['backend'],
         'frontend': ['frontend'],
         'fullstack': ['fullstack'],
@@ -61,52 +64,57 @@ if __name__ == "__main__":
         'r': ['r']
     }
 
-    user_language = None
+    current_date = datetime.now().strftime("%Y-%m-%d")
 
-    exp = ['student', 'junior', 'mid', 'senior']
+    experience_levels = ['student', 'junior', 'mid', 'senior']
 
-    preset = input("Enter preset for spiders:")
-    if int(preset) == 1:
-        keys = ' '.join(language.keys())
-        print(keys)
-        while True:
-            user_input = input("Enter a language: ").strip()
-            if user_input in language:
-                print(f"{user_input} inserted.")
-                break
-            else:
-                print(f"Language not in dict.")
+    preset_choice = int(input("Enter preset for spiders (1 or 2): "))
+    categories = None
+    Joinit_category = None
 
-        values = language[user_input]
-        for value in values:
-            if value in NofluffJobsSpider.language:
-                user_language = value
-                break
+    if preset_choice == 1:
+        print(list(language.keys()))
+        language_choice = get_user_input("Enter a language: ", list(language.keys()))
+        categories = language[language_choice]
+        for category in categories:
+            if category in NofluffJobsSpider.language:
+                Nofluff_category = category
+            if category in ProtocolSpider.language:
+                Protocol_category = category
+            if category in JoinitSpider.department:
+                Joinit_category = category
 
-    elif int(preset) == 2:
-        keys = ' '.join(departament.keys())
-        print(keys)
-        while True:
-            user_input = input("Enter a department: ").strip()
-            if user_input in departament:
-                print(f"{user_input} inserted.")
-                break
-            else:
-                print(f"Department not in dict.")
+    elif preset_choice == 2:
+        print(list(department.keys()))
+        department_choice = get_user_input("Enter a department: ", list(department.keys()))
+        categories = department[department_choice]
+        for category in categories:
+            if category in NofluffJobsSpider.department:
+                Nofluff_category = category
+            if category in ProtocolSpider.department:
+                Protocol_category = category
+            if category in JoinitSpider.department:
+                Joinit_category = category
 
-        values = departament[user_input]
-        for value in values:
-            if value in NofluffJobsSpider.department:
-                user_language = value
-                break
+    print(f"Available experience categories:{experience_levels}")
+    experience_level = get_user_input("Enter experience level: ", experience_levels)
 
-    print(exp)
-    while True:
-        experience_level = input("Enter experience level:")
-        if experience_level in exp:
-            break
-
+    if preset_choice == 1:
+        universal = language_choice
+    else:
+        universal = department_choice
     process = CrawlerProcess(get_project_settings())
+    process.crawl(NofluffJobsSpider, universal_category=universal, preset=preset_choice, experience_level=experience_level,
+                  secondary_category=Nofluff_category,date=current_date)
+    process.crawl(ProtocolSpider, universal_category=universal, preset=preset_choice, experience_level=experience_level,
+                  secondary_category=Protocol_category,date=current_date)
 
-    process.crawl(NofluffJobsSpider, preset=preset, experience_level=experience_level, secondary_category=user_language)
+    if Joinit_category is not None:
+        process.crawl(JoinitSpider, universal_category=universal, preset=preset_choice, experience_level=experience_level,
+                      secondary_category=Joinit_category,date=current_date)
+
     process.start()
+
+
+if __name__ == '__main__':
+    main()
