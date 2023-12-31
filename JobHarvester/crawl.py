@@ -4,6 +4,7 @@ from scrapy.utils.project import get_project_settings
 from JobHarvester.spiders.nofluffjobs import NofluffJobsSpider
 from JobHarvester.spiders.protocol import ProtocolSpider
 from JobHarvester.spiders.joinit import JoinitSpider
+from JobHarvester.spiders.solidjobs import SolidjobsSpider
 from datetime import datetime
 
 
@@ -24,22 +25,22 @@ def main():
         'fullstack': ['fullstack'],
         'mobile': ['mobile'],
         'embedded': ['embedded'],
-        'testing': ['qa-testing', 'testing'],
-        'devops': ['devops'],
-        'architecture': ['architecture'],
-        'security': ['security'],
+        'testing': ['qa-testing', 'testing','Tester'],
+        'devops': ['devops','DevOps'],
+        'architecture': ['architecture','Architekt'],
+        'security': ['security','Security'],
         'gamedev': ['gamedev, game-dev'],
         'ai': ['ai-ml', 'artificial-intelligence'],
-        'data': ['big-data-science', 'data'],
-        'sys-administrator': ['sys-administrator', 'it-admin', 'system-analytics'],
-        'agile': ['agile'],
+        'data': ['big-data-science', 'data','Analityk','Data%20Science'],
+        'sys-administrator': ['sys-administrator', 'it-admin', 'system-analytics','Administrator'],
+        'agile': ['agile','Manager%2FAgile'],
         'product-management': ['product-management'],
-        'project-manager': ['project-manager'],
-        'bi': ['business-analytics''business-intelligence'],
-        'ux': ['ux-ui'],
+        'project-manager': ['project-manager','Manager%2FAgile'],
+        'bi': ['business-analytics','business-intelligence','Analityk'],
+        'ux': ['ux-ui','UX%2FUI%20Designer'],
         'support': ['helpdesk', 'support'],
         'erp': ['sap-erp'],
-        'other': ['other']
+        'other': ['other','Pozostali%20specjaliści%20IT']
     }
 
     language = {
@@ -50,9 +51,9 @@ def main():
         'frontend': ['angular', 'Angular', 'Vue.js', 'React native', 'React', 'react.js'],
         'typescript': ['typescript', 'TypeScript'],
         'dotnet': ['.net', 'net', '.NET'],
-        'mobile': ['android', 'mobile', 'ios', 'iOS', 'Flutter', 'Kotlin'],
+        'mobile': ['android', 'Android', 'mobile', 'ios', 'iOS', 'Flutter', 'Kotlin'],
         'sql': ['sql', 'SQL'],
-        'c': ['c', 'C', 'c++', 'C%23', 'c%23'],
+        'c': ['c', 'C', 'c++', 'C%23', 'c%23','C%2FC%2B%2B'],
         'cloud': ['aws', 'AWS', 'Azure'],
         'go': ['go', 'Golang'],
         'ruby': ['ruby', 'Ruby on Rails', 'Ruby'],
@@ -60,7 +61,7 @@ def main():
         'php': ['php', 'PHP'],
         'elixir': ['Elixir'],
         'rust': ['rust '],
-        'node': ['node.js'],
+        'node': ['node.js','Node.js'],
         'r': ['r']
     }
 
@@ -83,6 +84,8 @@ def main():
                 Protocol_category = category
             if category in JoinitSpider.department:
                 Joinit_category = category
+            if category in SolidjobsSpider.language:
+                Solidjobs_category = category
 
     elif preset_choice == 2:
         print(list(department.keys()))
@@ -95,6 +98,8 @@ def main():
                 Protocol_category = category
             if category in JoinitSpider.department:
                 Joinit_category = category
+            if category in SolidjobsSpider.department:
+                Solidjobs_category = category
 
     print(f"Available experience categories:{experience_levels}")
     experience_level = get_user_input("Enter experience level: ", experience_levels)
@@ -103,15 +108,25 @@ def main():
         universal = language_choice
     else:
         universal = department_choice
+
     process = CrawlerProcess(get_project_settings())
-    process.crawl(NofluffJobsSpider, universal_category=universal, preset=preset_choice, experience_level=experience_level,
-                  secondary_category=Nofluff_category,date=current_date)
-    process.crawl(ProtocolSpider, universal_category=universal, preset=preset_choice, experience_level=experience_level,
-                  secondary_category=Protocol_category,date=current_date)
+    if Nofluff_category is not None:
+        process.crawl(NofluffJobsSpider, universal_category=universal, preset=preset_choice,
+                  experience_level=experience_level,
+                  secondary_category=Nofluff_category, date=current_date)
+    if Protocol_category is not None:
+        process.crawl(ProtocolSpider, universal_category=universal, preset=preset_choice, experience_level=experience_level,
+                  secondary_category=Protocol_category, date=current_date)
 
     if Joinit_category is not None:
-        process.crawl(JoinitSpider, universal_category=universal, preset=preset_choice, experience_level=experience_level,
-                      secondary_category=Joinit_category,date=current_date)
+        process.crawl(JoinitSpider, universal_category=universal, preset=preset_choice,
+                      experience_level=experience_level,
+                      secondary_category=Joinit_category, date=current_date)
+        
+    if Solidjobs_category is not None:
+        process.crawl(SolidjobsSpider, universal_category=universal, preset=preset_choice,
+                      experience_level=experience_level,
+                      secondary_category=Solidjobs_category, date=current_date)
 
     process.start()
 

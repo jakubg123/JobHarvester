@@ -12,21 +12,16 @@ class SolidjobsSpider(scrapy.Spider):
         'DOWNLOADER_MIDDLEWARES': {
             'JobHarvester.middlewares.RandomUserAgentMiddleware': None,
         },
-        'ITEM_PIPELINES': {
-            'JobHarvester.pipelines.MongoPipeline': None,
-        }
-
     }
 
     experience_mapping = {
-        'student': ['Staż', 'Junior'],
-        'junior': ['Junior', 'Regular'],
-        'mid': ['Regular', 'Senior'],
-        'senior': ['Senior']
+        'student': "Sta%C5%BC,Junior",
+        'junior': 'Junior,Regular',
+        'mid': 'Regular,Senior',
+        'senior': 'Senior'
     }
 
     department = {
-        'Programista',
         'Tester', 'Architekt', 'Analityk', 'Administrator',
         'DevOps', 'Support', 'Security', 'Data%20Science',
         'UX%2FUI%20Designer', 'Manager%2FAgile', 'Rekruter',
@@ -36,8 +31,8 @@ class SolidjobsSpider(scrapy.Spider):
     language = {
         'JavaScript', 'Python', '.NET', 'Java',
         'PHP', 'Android', 'iOS', 'Scala', 'Ruby',
-        'C%2FC%2B%2B', 'Angular', 'React', 'React',
-        'Golang', 'Pozostali%20programiści'
+        'C%2FC%2B%2B', 'Angular', 'React', 'Node.js',
+        'Golang',
     }
 
     def __init__(self, *args, universal_category=None, preset=None, experience_level=None, secondary_category=None,date, **kwargs):
@@ -45,15 +40,17 @@ class SolidjobsSpider(scrapy.Spider):
         self.experience_level = experience_level
         self.preset = int(preset)
         self.experience_categories = self.experience_mapping.get(experience_level)
-        self.secondary_categories = secondary_category
+        self.secondary_category = secondary_category
         self.date = date
         self.universal_category = universal_category
 
     def build_url(self):
+        experience_param = self.experience_mapping.get(self.experience_level)
+
         if int(self.preset) == 1:
-            pass
+            url = f'https://solid.jobs/offers/it;categories=Programista;subcategories={self.secondary_category};experiences={experience_param}'
         else:
-            url = f'https://solid.jobs/offers/it;experiences={self.experience_categories};subcategories={self.secondary_categories}'
+            url = f'https://solid.jobs/offers/it;categories={self.secondary_category};experiences={experience_param}'
         return url
 
     def start_requests(self):
