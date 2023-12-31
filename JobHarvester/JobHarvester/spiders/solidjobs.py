@@ -35,6 +35,7 @@ class SolidjobsSpider(scrapy.Spider):
         'Golang',
     }
 
+
     def __init__(self, *args, universal_category=None, preset=None, experience_level=None, secondary_category=None,date, **kwargs):
         super(SolidjobsSpider, self).__init__(*args, **kwargs)
         self.experience_level = experience_level

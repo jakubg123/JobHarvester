@@ -9,6 +9,7 @@ from itemadapter import ItemAdapter
 import pymongo
 from datetime import datetime
 from datetime import timedelta
+import json
 
 class JobharvesterPipeline:
     def process_item(self, item, spider):
@@ -18,6 +19,8 @@ class JobharvesterPipeline:
 class MongoPipeline:
 
     def __init__(self, mongo_uri, mongo_db):
+        self.deleted_items = None
+        self.inserted_items = None
         self.mongo_uri = mongo_uri
         self.mongo_db = mongo_db
 
@@ -32,14 +35,26 @@ class MongoPipeline:
         self.client = pymongo.MongoClient(self.mongo_uri)
         self.db = self.client[self.mongo_db]
 
+        self.inserted_items = []
+        self.deleted_items = []
+
         # clearing old positions that are probably already expiered
         delete_date = datetime.now() - timedelta(days=14)
         formatted_date = delete_date.strftime('%Y-%m-%d')
 
         collection_name = self.get_collection_name(spider)
-        self.db[collection_name].delete_many({'date': {'$lt': formatted_date}}) # gt removes the elements with date < x days
+        self.db[collection_name].delete_many({'date': {'$lt': formatted_date}})
+
+    # gt removes the elements with date < x days
 
     def close_spider(self, spider):
+        summary = {
+            'spider_name': str(spider),
+            'inserted_items': self.inserted_items,
+            'deleted_items': self.deleted_items
+        }
+        with open(f'{spider.experience_level}-{spider.universal_category}-{spider.date}.json', 'a') as file:
+            json.dump(summary, file, indent=4)
         self.client.close()
 
     def process_item(self, item, spider):
@@ -49,6 +64,7 @@ class MongoPipeline:
         else:
             self.db[collection_name].insert_one(dict(item))
             spider.logger.info(f"{item['item_id']} added to MongoDB.")
+            self.inserted_items.append(item['url'])
         return item
 
     def get_collection_name(self, spider):

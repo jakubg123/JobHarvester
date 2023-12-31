@@ -29,6 +29,7 @@ class JoinitSpider(scrapy.Spider):
         'go', 'support', 'erp', 'architecture', 'other'
     }
 
+
     def __init__(self, *args, universal_category=None, preset=None, experience_level=None, secondary_category=None,
                  date, **kwargs):
         super(JoinitSpider, self).__init__(*args, **kwargs)
